@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/theme/app_theme.dart';
-import 'features/dashboard/dashboard_screen.dart';
-import 'features/catalog/catalog_screen.dart';
 import 'features/business/business_home.dart';
 import 'features/auth/auth_screen.dart';
 
@@ -14,7 +12,6 @@ final routerProvider = Provider<GoRouter>((ref) => GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(path: '/', builder: (_, __) => const AuthGate(child: BusinessHome())),
-    GoRoute(path: '/catalog', builder: (_, __) => const AuthGate(child: CatalogScreen())),
   ],
 ));
 
