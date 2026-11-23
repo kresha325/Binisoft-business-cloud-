@@ -12,6 +12,7 @@ final routerProvider = Provider<GoRouter>((ref) => GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(path: '/', builder: (_, __) => const AuthGate(child: BusinessHome())),
+    GoRoute(path: '/catalog', builder: (_, __) => const AuthGate(child: BusinessHome(showCatalog: true))),
   ],
 ));
 
