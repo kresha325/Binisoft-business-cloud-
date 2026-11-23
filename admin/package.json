@@ -1,0 +1,12 @@
+{
+  "name": "binisoft-admin-bootstrap",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bootstrap:check": "node bootstrap-superadmin.mjs",
+    "bootstrap:apply": "node bootstrap-superadmin.mjs --apply"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}
