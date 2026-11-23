@@ -25,6 +25,10 @@ jobs:
           cache: true
       - name: Generate Flutter platform scaffolding
         run: flutter create --project-name binisoft_business_cloud --platforms=web,android,ios .
+      # Flutter create generates a sample widget test referencing MyApp,
+      # but this project uses BinisoftApp. Remove that unrelated scaffold test.
+      - name: Remove generated template test
+        run: rm -f test/widget_test.dart
       - name: Install dependencies
         run: flutter pub get
       - name: Analyze
