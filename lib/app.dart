@@ -5,14 +5,15 @@ import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/catalog/catalog_screen.dart';
+import 'features/auth/auth_screen.dart';
 
 final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
 
 final routerProvider = Provider<GoRouter>((ref) => GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(path: '/', builder: (_, __) => const DashboardScreen()),
-    GoRoute(path: '/catalog', builder: (_, __) => const CatalogScreen()),
+    GoRoute(path: '/', builder: (_, __) => const AuthGate(child: DashboardScreen())),
+    GoRoute(path: '/catalog', builder: (_, __) => const AuthGate(child: CatalogScreen())),
   ],
 ));
 
