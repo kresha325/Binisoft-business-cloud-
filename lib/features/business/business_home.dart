@@ -3,12 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../dashboard/dashboard_screen.dart';
+import '../catalog/catalog_screen.dart';
 import 'super_admin_screen.dart';
 
 /// Server-authorized admin status is determined by an immutable Firestore doc,
 /// never by an email address or a client-editable role.
 class BusinessHome extends StatelessWidget {
-  const BusinessHome({super.key});
+  const BusinessHome({super.key, this.showCatalog = false});
+  final bool showCatalog;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,7 @@ class BusinessHome extends StatelessWidget {
             if (!profile.data!.exists) return _PendingScreen(user: user, missingProfile: true);
             final data = profile.data!.data()!;
             if (data['role'] == 'owner' && (data['businessId'] as String? ?? '').isNotEmpty) {
-              return const DashboardScreen();
+              return showCatalog ? const CatalogScreen() : const DashboardScreen();
             }
             return _PendingScreen(user: user, missingProfile: false);
           },
