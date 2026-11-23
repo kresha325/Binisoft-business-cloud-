@@ -4,7 +4,8 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function platformAdmin() {
       return signedIn() &&
-        exists(/databases/$(database)/documents/platformAdmins/$(request.auth.uid));
+        exists(/databases/$(database)/documents/platformAdmins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/platformAdmins/$(request.auth.uid)).data.enabled == true;
     }
     function owner(bid) {
       return signedIn() &&
