@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function platformAdmin() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/platformAdmins/$(request.auth.uid));
+    }
+    function owner(bid) {
+      return signedIn() &&
+        get(/databases/$(database)/documents/businesses/$(bid)).data.ownerId == request.auth.uid;
+    }
+    function allowedBusiness(bid) {
+      return platformAdmin() || owner(bid);
+    }
+    match /platformAdmins/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false; // Bootstrap manually in Firebase Console/Admin SDK.
+    }
+    match /users/{uid} {
+      allow read: if platformAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['email','role','businessId','createdAt'])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == 'pending'
+        && request.resource.data.businessId == '';
+      allow update, delete: if platformAdmin();
+    }
+    match /businesses/{bid} {
+      allow read: if allowedBusiness(bid);
+      allow create: if platformAdmin() &&
+        request.resource.data.keys().hasAll(['name','type','ownerId','active','createdAt']);
+      allow update, delete: if platformAdmin();
+      match /{sub=**} {
+        allow read: if allowedBusiness(bid);
+        allow write: if false; // Catalog writes added with field validation later.
+      }
+    }
+  }
+}
