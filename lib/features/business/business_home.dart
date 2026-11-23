@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import '../dashboard/dashboard_screen.dart';
@@ -21,7 +22,9 @@ class BusinessHome extends StatelessWidget {
       builder: (context, admin) {
         if (admin.hasError) return _ErrorState(error: admin.error);
         if (!admin.hasData) return const _Loading();
-        if (admin.data!.exists) return const SuperAdminScreen();
+        if (admin.data!.exists && admin.data!.data()?['enabled'] == true) {
+          return const SuperAdminScreen();
+        }
         return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
           stream: db.collection('users').doc(user.uid).snapshots(),
           builder: (context, profile) {
@@ -72,7 +75,45 @@ class _PendingScreen extends StatefulWidget {
 
 class _PendingScreenState extends State<_PendingScreen> {
   bool working = false;
+  bool checkingAdmin = false;
   String? error;
+  String? adminDiagnostic;
+
+  Future<void> diagnoseAdmin() async {
+    if (checkingAdmin) return;
+    setState(() { checkingAdmin = true; adminDiagnostic = null; });
+    final projectId = Firebase.app().options.projectId;
+    final uid = widget.user.uid;
+    final path = 'platformAdmins/$uid';
+    try {
+      // Force a server read to distinguish a missing document from stale cache.
+      final doc = await FirebaseFirestore.instance
+          .collection('platformAdmins').doc(uid)
+          .get(const GetOptions(source: Source.server));
+      final enabled = doc.data()?['enabled'];
+      if (!mounted) return;
+      setState(() {
+        adminDiagnostic = 'Firebase project: $projectId\n'
+            'Authenticated UID: $uid\n'
+            'Document path: $path\n'
+            'Server document exists: ${doc.exists}\n'
+            'enabled: ${doc.exists ? enabled : 'not found'}\n'
+            'Source: Firestore server\n'
+            '${doc.exists && enabled == true ? 'Admin document is valid. Refresh or sign in again.' : 'Check the document ID and enabled field in this project.'}';
+      });
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+      setState(() => adminDiagnostic =
+          'Firebase project: $projectId\nDocument path: $path\n'
+          'Server error: ${e.code}\n${e.message ?? ''}');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => adminDiagnostic =
+          'Firebase project: $projectId\nDocument path: $path\nError: $e');
+    } finally {
+      if (mounted) setState(() => checkingAdmin = false);
+    }
+  }
 
   Future<void> createProfile() async {
     setState(() { working = true; error = null; });
@@ -98,7 +139,7 @@ class _PendingScreenState extends State<_PendingScreen> {
     ]),
     body: Center(child: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 460),
-      child: Padding(
+      child: SingleChildScrollView(child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           const Icon(Icons.verified_user_outlined, size: 54, color: Color(0xFF6557F5)),
@@ -112,6 +153,17 @@ class _PendingScreenState extends State<_PendingScreen> {
             textAlign: TextAlign.center),
           const SizedBox(height: 16),
           SelectableText('UID: ${widget.user.uid}'),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: checkingAdmin ? null : diagnoseAdmin,
+            icon: const Icon(Icons.fact_check_outlined),
+            label: Text(checkingAdmin ? 'Duke kontrolluar...' : 'Kontrollo Super Admin'),
+          ),
+          if (adminDiagnostic != null) ...[
+            const SizedBox(height: 12),
+            SelectableText(adminDiagnostic!,
+              style: Theme.of(context).textTheme.bodySmall),
+          ],
           if (widget.missingProfile) ...[
             const SizedBox(height: 20),
             FilledButton(onPressed: working ? null : createProfile,
@@ -122,7 +174,7 @@ class _PendingScreenState extends State<_PendingScreen> {
             child: Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ]),
-      ),
+      )),
     )),
   );
 }
