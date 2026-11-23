@@ -50,3 +50,33 @@ businesses/{businessId}         // name, type, ownerId, active, createdAt
 - Catalog CRUD, memberships/team roles, verification gating and subscription enforcement are not yet implemented.
 - Firebase web is configured; native iOS/Android registrations are still pending.
 - Do not store private account passwords or service-account keys in GitHub.
+
+## Secure platform Super Admin bootstrap (trusted computer only)
+
+The designated email is `Kreshnik.sh.gashi@hotmail.com`. The Firebase Auth UID,
+not the email string or GitHub username, is the admin identity.
+**Never put an admin password in source code or GitHub.**
+
+The one-time helper is in `admin/bootstrap-superadmin.mjs` and uses
+Firebase Admin SDK with Application Default Credentials (ADC). It refuses
+unverified or disabled Auth accounts and defaults to a no-write diagnostic.
+
+On a trusted computer with Google Cloud SDK and Firebase project administrator
+permissions, sign in using `gcloud auth application-default login`, then run:
+
+```bash
+cd admin
+npm install
+npm run bootstrap:check
+# Compare the printed UID to the user logged into the Flutter application.
+npm run bootstrap:apply
+```
+
+The administrator executing this must have permissions to read Firebase Auth
+users and write Firestore. Do not commit tokens or service-account keys.
+The helper writes `platformAdmins/{actual Firebase Auth UID}` in the
+`(default)` database. Recheck the Flutter app after applying.
+
+Security Rules in this repo now require `enabled == true`; repository changes
+are **not** automatically deployed to Firebase by GitHub Pages. Deploy them
+separately through the Firebase CLI or Firebase Console.
