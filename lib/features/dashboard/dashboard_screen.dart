@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../app.dart';
@@ -20,6 +21,11 @@ class DashboardScreen extends ConsumerWidget {
             onPressed: () => ref.read(themeModeProvider.notifier).state =
                 isDark ? ThemeMode.light : ThemeMode.dark,
             icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+          ),
+          IconButton(
+            tooltip: 'Dil nga llogaria',
+            onPressed: () async => FirebaseAuth.instance.signOut(),
+            icon: const Icon(Icons.logout_outlined),
           ),
           const SizedBox(width: 8),
         ],
