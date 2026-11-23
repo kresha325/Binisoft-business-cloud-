@@ -52,7 +52,7 @@ class _SuperAdminScreenState extends State<SuperAdminScreen> {
       await batch.commit();
       name.clear();
       ownerUid.clear();
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
     } catch (e) {
       if (mounted) setState(() => error = '$e');
     } finally {
